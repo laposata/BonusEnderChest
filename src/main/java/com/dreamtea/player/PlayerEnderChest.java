@@ -1,10 +1,9 @@
 package com.dreamtea.player;
 
-import com.dreamtea.imixin.IEnderLoot;
+import com.dreamtea.imixin.IEnderInv;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
@@ -13,16 +12,14 @@ import net.minecraft.loot.LootTable;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +28,36 @@ import static com.dreamtea.datagen.loottable.EnderBonusChestLootTable.BASIC_ENDE
 
 
 public class PlayerEnderChest {
+  public static final String RECEIVED_LOOT = "received";
+  public static final String EXTRA_LOOT = "extra_enderchest_loot";
+
   private boolean receivedLoot = false;
   private SimpleInventory loot;
   private ArrayList<ItemStack> lootReceived;
+  public final PlayerEntity owner;
+
+  public PlayerEnderChest(PlayerEntity owner) {
+    this.owner = owner;
+  }
+  public PlayerEnderChest(NbtCompound data, PlayerEntity owner) {
+    this.owner = owner;
+    this.receivedLoot = data.getBoolean(RECEIVED_LOOT);
+    this.loot = new SimpleInventory(27);
+    this.loot.readNbtList(data.getList(EXTRA_LOOT, NbtElement.COMPOUND_TYPE));
+    needsProcessing();
+  }
+
+  public void writeNbt(NbtCompound data){
+    needsProcessing();
+    data.putBoolean(RECEIVED_LOOT, receivedLoot);
+    NbtList list = new NbtList();
+    if(lootReceived != null) {
+      for (ItemStack item : lootReceived) {
+        list.add(item.writeNbt(new NbtCompound()));
+      }
+    }
+    data.put(EXTRA_LOOT,list);
+  }
   public boolean reset(){
     if(this.receivedLoot) {
       this.receivedLoot = false;
@@ -42,23 +66,24 @@ public class PlayerEnderChest {
     return false;
   }
 
-  public EnderChestScreenHandlerFactory handle(Text containerName){
-    return new EnderChestScreenHandlerFactory(containerName);
-  }
-  public void onOpen(PlayerEntity player) {
-    getLoot((ServerWorld) player.getWorld(), player, player.getRandom());
-    disperseReceived(player.getEnderChestInventory(), player.getRandom());
+  public void onOpen() {
+    getLoot((ServerWorld) owner.getWorld(), owner.getRandom());
+    disperseReceived(getEnderChestInv(), owner.getRandom());
   }
 
-  private void getLoot(ServerWorld world, PlayerEntity player, Random random){
+  private EnderChestInventory getEnderChestInv(){
+    return ((IEnderInv)owner).getBaseEnderchestInventory();
+  }
+
+  private void getLoot(ServerWorld world, Random random){
     if(!receivedLoot){
       loot = new SimpleInventory(27);
       LootTable lootTable = world.getServer().getLootManager().getTable(BASIC_ENDER_BONUS);
-      if (player instanceof ServerPlayerEntity) {
-        Criteria.PLAYER_GENERATES_CONTAINER_LOOT.trigger((ServerPlayerEntity)player, BASIC_ENDER_BONUS);
+      if (owner instanceof ServerPlayerEntity) {
+        Criteria.PLAYER_GENERATES_CONTAINER_LOOT.trigger((ServerPlayerEntity)owner, BASIC_ENDER_BONUS);
       }
-      LootContext.Builder builder = new LootContext.Builder(world).parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(player.getBlockPos())).random(random);
-      builder.luck(player.getLuck()).parameter(LootContextParameters.THIS_ENTITY, player);
+      LootContext.Builder builder = new LootContext.Builder(world).parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(owner.getBlockPos())).random(random);
+      builder.luck(owner.getLuck()).parameter(LootContextParameters.THIS_ENTITY, owner);
       lootTable.supplyInventory(loot, builder.build(LootContextTypes.CHEST));
       receivedLoot = true;
     }
@@ -137,27 +162,5 @@ public class PlayerEnderChest {
       lootReceived.add(processing);
     }
 
-  }
-
-  public static class EnderChestScreenHandlerFactory
-    implements NamedScreenHandlerFactory {
-    private final Text name;
-
-    public EnderChestScreenHandlerFactory( Text name) {
-      this.name = name;
-    }
-
-    @Override
-    public Text getDisplayName() {
-      return this.name;
-    }
-
-    @Override
-    public ScreenHandler createMenu(int i, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-      if(playerEntity instanceof IEnderLoot iel){
-        iel.getPlayerEnderChest().onOpen(playerEntity);
-      }
-      return GenericContainerScreenHandler.createGeneric9x3(i, playerInventory, playerEntity.getEnderChestInventory());
-    }
   }
 }
