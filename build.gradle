@@ -119,7 +119,7 @@ curseforge {
 	} else {
 		apiKey = System.getenv("apikey")
 		project {
-			id = 'TBD'
+			id = '669400'
 			changelog = "init"
 			releaseType = 'release'
 			addGameVersion '1.19.2'
