@@ -10,7 +10,7 @@ public class EnderChestBonusGamerule {
   public static GameRules.Key<GameRules.BooleanRule> ENDER_LOOT_BONUS_CHESTS;
 
   public static void initRule(){
-    ENDER_LOOT_BONUS_CHESTS = GameRuleRegistry.register(ENDER_LOOT_BONUS_RULE, GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(false));
+    ENDER_LOOT_BONUS_CHESTS = GameRuleRegistry.register(ENDER_LOOT_BONUS_RULE, GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
   }
 }
 

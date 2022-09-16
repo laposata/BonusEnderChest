@@ -1,10 +1,12 @@
 package com.dreamtea.player;
 
+import com.dreamtea.commands.AllowEnderOverflowGamerule;
 import com.dreamtea.imixin.IEnderInv;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EnderChestInventory;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
@@ -23,6 +25,7 @@ import net.minecraft.util.math.random.Random;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.dreamtea.datagen.loottable.EnderBonusChestLootTable.BASIC_ENDER_BONUS;
 
@@ -47,6 +50,20 @@ public class PlayerEnderChest {
     needsProcessing();
   }
 
+  public void insertLoot(ItemStack item){
+    if(lootReceived == null){
+      lootReceived = new ArrayList<>();
+    }
+    lootReceived.add(item);
+  }
+
+  public void insertLoot(List<ItemStack> item){
+    if(lootReceived == null){
+      lootReceived = new ArrayList<>();
+    }
+    lootReceived.addAll(item);
+  }
+
   public void writeNbt(NbtCompound data){
     needsProcessing();
     data.putBoolean(RECEIVED_LOOT, receivedLoot);
@@ -58,6 +75,7 @@ public class PlayerEnderChest {
     }
     data.put(EXTRA_LOOT,list);
   }
+
   public boolean reset(){
     if(this.receivedLoot) {
       this.receivedLoot = false;
@@ -66,9 +84,27 @@ public class PlayerEnderChest {
     return false;
   }
 
+  public int remove(Predicate<ItemStack> shouldRemove, int maxCount) {
+    int i = 0;
+    boolean bl = maxCount == 0;
+    i += Inventories.remove(owner.getEnderChestInventory(), shouldRemove, maxCount - i, bl);
+    for(ItemStack item: lootReceived) {
+      i += Inventories.remove(item, shouldRemove, maxCount - i, bl);
+    }
+    ItemStack itemStack = this.owner.currentScreenHandler.getCursorStack();
+    i += Inventories.remove(itemStack, shouldRemove, maxCount - i, bl);
+    if (itemStack.isEmpty()) {
+      this.owner.currentScreenHandler.setCursorStack(ItemStack.EMPTY);
+    }
+    return i;
+  }
+
   public void onOpen() {
     getLoot((ServerWorld) owner.getWorld(), owner.getRandom());
     disperseReceived(getEnderChestInv(), owner.getRandom());
+    if(!owner.getWorld().getGameRules().getBoolean(AllowEnderOverflowGamerule.ENDER_CHEST_OVERFLOW)){
+      lootReceived = null;
+    }
   }
 
   private EnderChestInventory getEnderChestInv(){
