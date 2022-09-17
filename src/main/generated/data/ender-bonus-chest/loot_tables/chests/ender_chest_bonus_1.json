@@ -59,6 +59,70 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "minecraft:book"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:book"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:book"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:book"
+        }
+      ],
+      "functions": [
+        {
+          "add": false,
+          "count": 2.0,
+          "function": "minecraft:set_count"
+        },
+        {
+          "add": false,
+          "enchantments": {
+            "minecraft:mending": 1.0
+          },
+          "function": "minecraft:set_enchantments"
+        },
+        {
+          "add": false,
+          "enchantments": {
+            "minecraft:sharpness": 5.0
+          },
+          "function": "minecraft:set_enchantments"
+        },
+        {
+          "add": false,
+          "enchantments": {
+            "minecraft:swift_sneak": 3.0
+          },
+          "function": "minecraft:set_enchantments"
+        },
+        {
+          "add": false,
+          "enchantments": {
+            "minecraft:unbreaking": 3.0
+          },
+          "function": "minecraft:set_enchantments"
+        },
+        {
+          "add": false,
+          "enchantments": {
+            "minecraft:efficiency": 4.0
+          },
+          "function": "minecraft:set_enchantments"
+        }
+      ],
+      "rolls": 1.0
+    },
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "functions": [
             {
               "add": false,
@@ -146,8 +210,8 @@
       ],
       "rolls": {
         "type": "minecraft:uniform",
-        "max": 5.0,
-        "min": 2.0
+        "max": 2.0,
+        "min": 1.0
       }
     }
   ]

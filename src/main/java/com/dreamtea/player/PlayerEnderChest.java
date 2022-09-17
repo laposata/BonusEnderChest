@@ -88,8 +88,10 @@ public class PlayerEnderChest {
     int i = 0;
     boolean bl = maxCount == 0;
     i += Inventories.remove(owner.getEnderChestInventory(), shouldRemove, maxCount - i, bl);
-    for(ItemStack item: lootReceived) {
-      i += Inventories.remove(item, shouldRemove, maxCount - i, bl);
+    if(lootReceived != null){
+      for(ItemStack item: lootReceived) {
+        i += Inventories.remove(item, shouldRemove, maxCount - i, bl);
+      }
     }
     ItemStack itemStack = this.owner.currentScreenHandler.getCursorStack();
     i += Inventories.remove(itemStack, shouldRemove, maxCount - i, bl);

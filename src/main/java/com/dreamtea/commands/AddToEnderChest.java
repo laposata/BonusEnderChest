@@ -8,6 +8,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemStackArgument;
@@ -26,6 +27,10 @@ import java.util.Collection;
 
 public class AddToEnderChest {
   public static final int MAX_STACKS = 100;
+
+  public static void init(){
+    CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> register(dispatcher, registryAccess)));
+  }
 
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess commandRegistryAccess) {
     dispatcher.register((LiteralArgumentBuilder)((LiteralArgumentBuilder) CommandManager.literal("giveEnder").requires(source -> source.hasPermissionLevel(2))).then(CommandManager.argument("targets", EntityArgumentType.players()).then((ArgumentBuilder<ServerCommandSource, ?>)((RequiredArgumentBuilder)CommandManager.argument("item", ItemStackArgumentType.itemStack(commandRegistryAccess)).executes(context -> execute((ServerCommandSource)context.getSource(), ItemStackArgumentType.getItemStackArgument(context, "item"), EntityArgumentType.getPlayers(context, "targets"), 1))).then(CommandManager.argument("count", IntegerArgumentType.integer(1)).executes(context -> execute((ServerCommandSource)context.getSource(), ItemStackArgumentType.getItemStackArgument(context, "item"), EntityArgumentType.getPlayers(context, "targets"), IntegerArgumentType.getInteger(context, "count")))))));

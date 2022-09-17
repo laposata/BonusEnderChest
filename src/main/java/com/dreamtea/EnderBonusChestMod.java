@@ -1,5 +1,8 @@
 package com.dreamtea;
 
+import com.dreamtea.commands.AddToEnderChest;
+import com.dreamtea.commands.AllowEnderOverflowGamerule;
+import com.dreamtea.commands.ClearEnderChest;
 import com.dreamtea.commands.EnderChestBonusGamerule;
 import com.dreamtea.commands.RollLootToEnderChest;
 import net.fabricmc.api.ModInitializer;
@@ -23,6 +26,9 @@ public class EnderBonusChestMod implements ModInitializer {
 		// Proceed with mild caution.
 		RollLootToEnderChest.init();
 		EnderChestBonusGamerule.initRule();
+		AllowEnderOverflowGamerule.initRule();
+		ClearEnderChest.init();
+		AddToEnderChest.init();
 		LOGGER.info("Hello Fabric world!");
 	}
 }

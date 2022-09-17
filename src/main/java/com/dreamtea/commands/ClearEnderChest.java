@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemPredicateArgumentType;
@@ -28,6 +29,9 @@ public class ClearEnderChest {
   private static final DynamicCommandExceptionType FAILED_SINGLE_EXCEPTION = new DynamicCommandExceptionType(playerName -> Text.translatable("clear.failed.single", playerName));
   private static final DynamicCommandExceptionType FAILED_MULTIPLE_EXCEPTION = new DynamicCommandExceptionType(playerCount -> Text.translatable("clear.failed.multiple", playerCount));
 
+  public static void init(){
+    CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> register(dispatcher, registryAccess)));
+  }
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess commandRegistryAccess) {
     dispatcher.register((CommandManager.literal("clearEnderchest").requires(source -> source.hasPermissionLevel(2)))
           .executes(context -> execute(context.getSource(), Collections.singleton(context.getSource().getPlayerOrThrow()), stack -> true, -1))
@@ -44,8 +48,6 @@ public class ClearEnderChest {
     for (ServerPlayerEntity serverPlayerEntity : targets) {
       if (serverPlayerEntity instanceof IEnderLoot iel) {
         i += iel.getPlayerEnderChest().remove(item, maxCount);
-        serverPlayerEntity.currentScreenHandler.sendContentUpdates();
-        serverPlayerEntity.playerScreenHandler.onContentChanged(serverPlayerEntity.getEnderChestInventory());
       }
     }
     if (i == 0) {
