@@ -33,6 +33,7 @@ import static com.dreamtea.datagen.loottable.EnderBonusChestLootTable.BASIC_ENDE
 public class PlayerEnderChest {
   public static final String RECEIVED_LOOT = "received";
   public static final String EXTRA_LOOT = "extra_enderchest_loot";
+  public static final String ECHEST_KEY = "PlayerBonusEnderChest";
 
   private boolean receivedLoot = false;
   private SimpleInventory loot;
@@ -42,12 +43,11 @@ public class PlayerEnderChest {
   public PlayerEnderChest(PlayerEntity owner) {
     this.owner = owner;
   }
+
   public PlayerEnderChest(NbtCompound data, PlayerEntity owner) {
     this.owner = owner;
-    this.receivedLoot = data.getBoolean(RECEIVED_LOOT);
-    this.loot = new SimpleInventory(27);
-    this.loot.readNbtList(data.getList(EXTRA_LOOT, NbtElement.COMPOUND_TYPE));
     needsProcessing();
+    readNbt(data);
   }
 
   public void insertLoot(ItemStack item){
@@ -64,16 +64,36 @@ public class PlayerEnderChest {
     lootReceived.addAll(item);
   }
 
-  public void writeNbt(NbtCompound data){
-    needsProcessing();
-    data.putBoolean(RECEIVED_LOOT, receivedLoot);
+  public void writeNbt(NbtCompound data) {
+    NbtCompound nbt = new NbtCompound();
+    nbt.putBoolean(RECEIVED_LOOT, receivedLoot);
     NbtList list = new NbtList();
     if(lootReceived != null) {
       for (ItemStack item : lootReceived) {
         list.add(item.writeNbt(new NbtCompound()));
       }
     }
-    data.put(EXTRA_LOOT,list);
+    nbt.put(EXTRA_LOOT,list);
+    data.put(ECHEST_KEY, nbt);
+  }
+
+  public void readNbt(NbtCompound nbt){
+    if(nbt.contains(ECHEST_KEY)){
+      NbtCompound data = nbt.getCompound(ECHEST_KEY);
+      if(data.contains(RECEIVED_LOOT)){
+        this.receivedLoot = data.getBoolean(RECEIVED_LOOT);
+      } else {
+        this.receivedLoot = false;
+      }
+      if(data.contains(EXTRA_LOOT)){
+        this.loot = new SimpleInventory(27);
+        this.loot.readNbtList(data.getList(EXTRA_LOOT, NbtElement.COMPOUND_TYPE));
+      }
+    }
+    if(this.loot == null){
+      this.loot = new SimpleInventory(27);
+    }
+
   }
 
   public boolean reset(){
@@ -114,7 +134,7 @@ public class PlayerEnderChest {
   }
 
   private void getLoot(ServerWorld world, Random random){
-    if(!receivedLoot){
+      if(!receivedLoot){
       loot = new SimpleInventory(27);
       LootTable lootTable = world.getServer().getLootManager().getTable(BASIC_ENDER_BONUS);
       if (owner instanceof ServerPlayerEntity) {
